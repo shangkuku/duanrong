@@ -18,6 +18,8 @@ import us.codecraft.xsoup.Xsoup;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,13 +27,15 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Bootstrap1 {
     private static Executor executor = Executors.newFixedThreadPool(1000);
 
-    private static File f = new File("C:\\Users\\007_g\\Desktop\\dw-4.txt");
+    private static File f = new File("C:\\Users\\Administrator\\Desktop\\dw-8.txt");
 
-    private static AtomicInteger atomicInteger = new AtomicInteger(1);
+    private static AtomicInteger atomicInteger = new AtomicInteger(10000  );
 
     private static AtomicInteger sellout = new AtomicInteger(0);
 
@@ -72,7 +76,7 @@ public class Bootstrap1 {
                 for (int detailId = 0; detailId < 100000; ) {
                         detailId = nowRetry > 0  && nowRetry < 3? detailId : atomicInteger.getAndAdd(1);
                         String detailIdStr = String.format("%05d", detailId);
-                        String url = "https://www.duanrong.com/zqzr/detail/57" + detailIdStr;
+                        String url = "https://www.duanrong.com/zqzr/confirm?id=63"+ detailIdStr + "&amount=500";
 //                    String url = "https://www.duanrong.com/zqzr/detail/5914913";
                         //---------------------------------
                         //			【详细说明】
@@ -107,31 +111,32 @@ public class Bootstrap1 {
                         String html = HttpClientUtil.send(config);
                         nowRetry = 0;
                         Document document = Jsoup.parse(html);
-                        if (!html.contains("确认购买")) {
+                        if (!html.contains("立即加入")) {
                             sellout.addAndGet(1);
                             continue;
                         }
                         System.out.println(detailId);
-                        String charge = Xsoup.compile("//li[@class=dif-width]/font/text()").evaluate(document).get().trim();
-                        String leavingPeriod = Xsoup.compile("//ul[@class=part1-left-list]/li[2]/h3/text()").evaluate(document).get().trim();
-                        String amount = Xsoup.compile("//ul[@class=part1-left-list]/li[3]/h3/text()").evaluate(document).get().trim();
-                        String period = leavingPeriod.substring(0, 1);
-                        int periodI = 100;
-                        try {
-                            periodI = Integer.parseInt(period);
-                        } catch (Throwable t) {
-                            periodI = 100;
+                        Pattern p = Pattern.compile("(\\d{2})折");
+                        Matcher matcher = p.matcher(html);
+                        String charge;
+                        if (matcher.find()) {
+                            charge = matcher.group(1);
+                        } else {
+                            charge = "100";
                         }
-                        int changeI = Integer.parseInt(charge.substring(0, charge.length() - 1));
-                        if (changeI < 95) { // 85折 90天内
+                        int chargeI = Integer.parseInt(charge);
+                        chargeI = chargeI == 0 ? 100 : chargeI;
+                        String leavingPeriod = Xsoup.compile("//ul[@class=zqxx-part-box]/li[4]/text()").evaluate(document).get().trim();
+                        String amount = Xsoup.compile("//ul[@class=zqxx-part-box]/li[5]/text()").evaluate(document).get().trim();
+                        if (chargeI < 95) { // 85折 90天内
                             System.out.println("url:" + url + " get!");
                             StringBuilder sb = new StringBuilder();
-                            sb.append(" "+ url).append(" " + charge).append(" " +amount).append(" " + leavingPeriod);
+                            sb.append(" "+ url).append(" " + chargeI + "%").append(" " +amount).append(" " + leavingPeriod);
                             sb.append("\r\n");
                             FileUtils.write(f, sb.toString(), "UTF-8", true);
                         } else {
                             up_95.addAndGet(1);
-                            System.out.println("url:" + url + "当前折扣为:" + charge);
+                            System.out.println("url:" + url + "当前折扣为:" + chargeI);
                         }
                     } catch (Throwable t) {
                         nowRetry++;
