@@ -6,36 +6,28 @@ import com.arronlong.httpclientutil.common.SSLs;
 import com.arronlong.httpclientutil.exception.HttpProcessException;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.Header;
-import org.apache.http.HttpHost;
 import org.apache.http.client.HttpClient;
-import org.apache.http.conn.routing.HttpRoute;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.protocol.HttpCoreContext;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import us.codecraft.xsoup.Xsoup;
 
 import java.io.File;
-import java.io.IOException;
-import java.text.DateFormat;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-public class Bootstrap1 {
+/**
+ * 银湖网
+ */
+public class Bootstrap3 {
     private static Executor executor = Executors.newFixedThreadPool(1000);
 
-    private static File f = new File("C:\\Users\\007_g\\Desktop\\dw-8.txt");
+    private static File f = new File("C:\\Users\\007_g\\Desktop\\xyb-8.txt");
 
-    private static AtomicInteger atomicInteger = new AtomicInteger(77694  );
+    private static AtomicInteger atomicInteger = new AtomicInteger(47221);
 
     private static AtomicInteger sellout = new AtomicInteger(0);
 
@@ -59,13 +51,14 @@ public class Bootstrap1 {
 
         }
     }
-        private static HttpClient client = hcb.build();
+
+    private static HttpClient client = hcb.build();
 
     private static class Worker implements Runnable {
 
 
         public void run() {
-                work();
+            work();
 
         }
 
@@ -74,18 +67,24 @@ public class Bootstrap1 {
                 int retry = 3;
                 int nowRetry = 0;
                 for (int detailId = 0; detailId < 100000; ) {
-                        detailId = nowRetry > 0  && nowRetry < 3? detailId : atomicInteger.getAndAdd(1);
-                        String detailIdStr = String.format("%05d", detailId);
-                        String url = "https://www.duanrong.com/zqzr/confirm?id=63"+ detailIdStr + "&amount=500";
+//                    try {
+//                        TimeUnit.MILLISECONDS.sleep(500);
+//                    } catch (InterruptedException e) {
+//
+//                    }
+                    detailId = nowRetry > 0 && nowRetry < 3 ? detailId : atomicInteger.getAndAdd(1);
+                    String detailIdStr = String.format("%05d", detailId);
+                    String url = "https://www.xyb100.com/invest/bond/detail?bid=" + detailIdStr;
 //                    String url = "https://www.duanrong.com/zqzr/detail/5914913";
-                        //---------------------------------
-                        //			【详细说明】
-                        //--------------------------------
-                        //插件式配置Header（各种header信息、自定义header）
+                    //---------------------------------
+                    //			【详细说明】
+                    //--------------------------------
+                    //插件式配置Header（各种header信息、自定义header）
                     try {
                         Header[] headers = HttpHeader.custom()
                                 .userAgent("Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0;")
-                                .referer("https://www.duanrong.com/zqzr/list")
+                                .referer("https://www.xyb100.com/invest/bond")
+                                .cookie("NTKF_T2D_CLIENTID=guest21422B74-DAD1-0E49-E173-E103FBAF247E; _ga=GA1.2.908514021.1532783492; _gid=GA1.2.303059170.1532783492; acw_tc=AQAAACDwg2wGbAcAidUgd/9v52fEFHR3; JSESSIONID=B868533BA22CF50E1D8A9F7F3A8EEFAF-n1; nTalk_CACHE_DATA={uid:kf_9482_ISME9754_guest21422B74-DAD1-0E,tid:1532878849704089}; Hm_lvt_1e0961af727f22820c9b6ecf9ffe70a0=1532835375,1532835636,1532878850,1532878871; login_error_count=0; Hm_lvt_395b7684909ea0e74525a8c0e22f97de=1532878934; Hm_lpvt_395b7684909ea0e74525a8c0e22f97de=1532878934; Hm_lpvt_1e0961af727f22820c9b6ecf9ffe70a0=1532879021")
                                 .build();
 
 
@@ -110,33 +109,28 @@ public class Bootstrap1 {
 
                         String html = HttpClientUtil.send(config);
                         nowRetry = 0;
+                        System.out.println(detailId);
                         Document document = Jsoup.parse(html);
-                        if (!html.contains("立即加入")) {
+                        if (!html.contains("立即出借")) {
                             sellout.addAndGet(1);
+                            System.out.println("nothing" + detailId);
                             continue;
                         }
-                        System.out.println(detailId);
-                        Pattern p = Pattern.compile("(\\d{2})折");
-                        Matcher matcher = p.matcher(html);
-                        String charge;
-                        if (matcher.find()) {
-                            charge = matcher.group(1);
-                        } else {
-                            charge = "100";
-                        }
-                        int chargeI = Integer.parseInt(charge);
-                        chargeI = chargeI == 0 ? 100 : chargeI;
-                        String leavingPeriod = Xsoup.compile("//ul[@class=zqxx-part-box]/li[4]/text()").evaluate(document).get().trim();
-                        String amount = Xsoup.compile("//ul[@class=zqxx-part-box]/li[5]/text()").evaluate(document).get().trim();
-                        if (chargeI < 95) { // 85折 90天内
+//                        int chargeI = Integer.parseInt(charge);
+//                        chargeI = chargeI == 0 ? 100 : chargeI;
+                        String dueAmount = Xsoup.compile("//p[@class=ui-input-body]/input[1]/@value").evaluate(document).get().trim();
+                        String actualAmount = Xsoup.compile("//p[@class=ui-input-body]/input[2]/@value").evaluate(document).get().trim();
+                        int charge = (int) (Double.parseDouble(actualAmount) / Double.parseDouble(dueAmount) * 100);
+                        String leavingDay = Xsoup.compile("//div[@class=detail-content-infor]/div[2]/p[2]/text()").evaluate(document).get().trim();
+                        if (charge <= 90) { // 85折 90天内
                             System.out.println("url:" + url + " get!");
                             StringBuilder sb = new StringBuilder();
-                            sb.append(" "+ url).append(" " + chargeI + "%").append(" " +amount).append(" " + leavingPeriod);
+                            sb.append(" " + url).append(" " + charge).append(" " + actualAmount).append(" " + leavingDay);
                             sb.append("\r\n");
                             FileUtils.write(f, sb.toString(), "UTF-8", true);
                         } else {
                             up_95.addAndGet(1);
-                            System.out.println("url:" + url + "当前折扣为:" + chargeI);
+                            System.out.println("url:" + url + "当前折扣为:" + charge);
                         }
                     } catch (Throwable t) {
                         nowRetry++;
@@ -148,9 +142,8 @@ public class Bootstrap1 {
 
     public static void main(String[] args) throws HttpProcessException {
         System.setProperty("http.maxConnections", "1000");
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 1; i++) {
             executor.execute(new Worker());
-
         }
     }
 }
